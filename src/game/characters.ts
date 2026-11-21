@@ -1,237 +1,198 @@
-export type CategoryId = 'cartoons' | 'pokemon' | 'heroes' | 'disney' | 'indian' | 'popular';
+export type Category = 'cartoons' | 'pokemon' | 'heroes' | 'disney' | 'indian' | 'popular';
+export type CharacterId =
+  | 'doraemon'
+  | 'pikachu'
+  | 'elsa'
+  | 'spiderman'
+  | 'ironman'
+  | 'shinchan'
+  | 'barbie'
+  | 'bheem';
+export type ZoneId = 'village' | 'forest' | 'frozen' | 'lab' | 'city' | 'mountain' | 'castle' | 'ocean' | 'pokemon';
 
-export interface Character {
+export interface CharacterDef {
   id: string;
   name: string;
-  category: CategoryId;
-  emoji: string;
-  /** One-line special ability shown on the card */
+  category: Category;
+  /** Short ability name shown in UI */
   ability: string;
-  /** Card gradient: [from, to] */
-  colors: [string, string];
-  playable?: boolean;
-  missionId?: string;
-  /** Where on the island this character lives */
-  home?: string;
+  /** One line describing the physical ability */
+  hint: string;
+  playable: boolean;
+  /** Zone this character calls home (used for the world screen + spawn suggestions) */
+  home: ZoneId;
 }
 
-export interface Category {
-  id: CategoryId;
-  label: string;
-  emoji: string;
-  colors: [string, string];
-}
-
-export const categories: Category[] = [
-  { id: 'cartoons', label: 'Classic Cartoons', emoji: '📺', colors: ['#ff9a9e', '#fecfef'] },
-  { id: 'pokemon', label: 'Pokémon', emoji: '⚡', colors: ['#ffd452', '#ff8a3d'] },
-  { id: 'heroes', label: 'Superheroes', emoji: '🦸', colors: ['#5aa9ff', '#7a5cff'] },
-  { id: 'disney', label: 'Disney & Fantasy', emoji: '🏰', colors: ['#a78bfa', '#f0abfc'] },
-  { id: 'indian', label: 'Indian Cartoons', emoji: '🪔', colors: ['#ffb86b', '#ff6b6b'] },
-  { id: 'popular', label: 'Popular Favourites', emoji: '🌈', colors: ['#4fd1c5', '#3b82f6'] },
+export const categories: { id: Category; label: string; emoji: string; tint: string }[] = [
+  { id: 'cartoons', label: 'Classic Cartoons', emoji: '📺', tint: '#ff9a9e' },
+  { id: 'pokemon', label: 'Pokémon', emoji: '⚡', tint: '#ffd452' },
+  { id: 'heroes', label: 'Superheroes', emoji: '🦸', tint: '#5aa9ff' },
+  { id: 'disney', label: 'Disney & Fantasy', emoji: '🏰', tint: '#a78bfa' },
+  { id: 'indian', label: 'Indian Cartoons', emoji: '🪔', tint: '#ffb86b' },
+  { id: 'popular', label: 'More Toons & Games', emoji: '🌈', tint: '#4fd1c5' },
 ];
 
-export const characters: Character[] = [
-  // ───────────────────────── Classic Cartoons ─────────────────────────
+export const PLAYABLE: CharacterDef[] = [
   {
     id: 'doraemon',
     name: 'Doraemon',
     category: 'cartoons',
-    emoji: '🐱',
-    ability: 'Gadget Inventor',
-    colors: ['#64c8ff', '#2b7fe0'],
+    ability: 'Gadget Pocket',
+    hint: 'Magnet pulls metal gears · hold Jump to glide with the Bamboo Copter',
     playable: true,
-    missionId: 'm-doraemon',
-    home: 'workshop',
+    home: 'village',
   },
-  { id: 'nobita', name: 'Nobita', category: 'cartoons', emoji: '👦', ability: 'Quick Thinker', colors: ['#ffd36b', '#f2a33c'], home: 'village' },
-  { id: 'shizuka', name: 'Shizuka', category: 'cartoons', emoji: '👧', ability: 'Kind Helper', colors: ['#ff9ecb', '#f26fa8'], home: 'village' },
-  { id: 'gian', name: 'Gian', category: 'cartoons', emoji: '🎤', ability: 'Super Strength', colors: ['#ffb072', '#e2703a'], home: 'village' },
-  { id: 'suneo', name: 'Suneo', category: 'cartoons', emoji: '🧢', ability: 'Clever Trader', colors: ['#b2c7ff', '#6f8fe0'], home: 'village' },
-  {
-    id: 'shinchan',
-    name: 'Shinchan',
-    category: 'cartoons',
-    emoji: '😜',
-    ability: 'Mystery Detective',
-    colors: ['#ffd166', '#ff8fab'],
-    playable: true,
-    missionId: 'm-shinchan',
-    home: 'city',
-  },
-  { id: 'himawari', name: 'Himawari', category: 'cartoons', emoji: '🍼', ability: 'Shiny Collecting', colors: ['#ffe0f0', '#ffb3d9'], home: 'village' },
-  { id: 'kazama', name: 'Kazama', category: 'cartoons', emoji: '🤓', ability: 'Fact Finder', colors: ['#9be7ff', '#4fa8d8'], home: 'city' },
-  { id: 'nene', name: 'Nene', category: 'cartoons', emoji: '🎀', ability: 'Bunny Tamer', colors: ['#ffc2dd', '#ff86b5'], home: 'village' },
-  { id: 'masao', name: 'Masao', category: 'cartoons', emoji: '🙂', ability: 'Brave Heart', colors: ['#c7f0d8', '#7ed0a0'], home: 'village' },
-  { id: 'heidi', name: 'Heidi', category: 'cartoons', emoji: '🏔️', ability: 'Mountain Guide', colors: ['#a8e6cf', '#5bbf9a'], home: 'mountain' },
-  { id: 'peter', name: 'Peter', category: 'cartoons', emoji: '🐐', ability: 'Goat Whisperer', colors: ['#ffe08a', '#d9a441'], home: 'mountain' },
-  { id: 'tom', name: 'Tom', category: 'cartoons', emoji: '🐈', ability: 'Sneaky Pounce', colors: ['#cfd8e3', '#8a97a8'], home: 'village' },
-  { id: 'jerry', name: 'Jerry', category: 'cartoons', emoji: '🐭', ability: 'Tiny Escape', colors: ['#ffd9a0', '#e0a458'], home: 'village' },
-  { id: 'mickey', name: 'Mickey Mouse', category: 'cartoons', emoji: '🐭', ability: 'Magic Conductor', colors: ['#ff8a8a', '#d94a4a'], home: 'castle' },
-  { id: 'minnie', name: 'Minnie Mouse', category: 'cartoons', emoji: '🎀', ability: 'Style Sparkle', colors: ['#ff9ecb', '#e5548d'], home: 'castle' },
-  { id: 'mrbean', name: 'Mr. Bean', category: 'cartoons', emoji: '🕴️', ability: 'Silly Solutions', colors: ['#d9c28f', '#9c8153'], home: 'city' },
-
-  // ───────────────────────── Pokémon ─────────────────────────
   {
     id: 'pikachu',
     name: 'Pikachu',
     category: 'pokemon',
-    emoji: '⚡',
-    ability: 'Electric Power',
-    colors: ['#ffe066', '#ffa41b'],
+    ability: 'Thunder Zap',
+    hint: 'Charge lamps and machines with a bolt of electricity',
     playable: true,
-    missionId: 'm-pikachu',
-    home: 'lab',
+    home: 'village',
   },
-  { id: 'ash', name: 'Ash', category: 'pokemon', emoji: '🧢', ability: 'Never Gives Up', colors: ['#7fd1ff', '#2f8ddb'], home: 'lab' },
-  { id: 'eevee', name: 'Eevee', category: 'pokemon', emoji: '🦊', ability: 'Many Evolutions', colors: ['#f7d9a8', '#c99654'], home: 'forest' },
-  { id: 'charizard', name: 'Charizard', category: 'pokemon', emoji: '🐉', ability: 'Blazing Wings', colors: ['#ff9a5a', '#d63b26'], home: 'mountain' },
-  { id: 'bulbasaur', name: 'Bulbasaur', category: 'pokemon', emoji: '🌱', ability: 'Vine Growth', colors: ['#b8e986', '#5fa83a'], home: 'forest' },
-  { id: 'squirtle', name: 'Squirtle', category: 'pokemon', emoji: '🐢', ability: 'Water Spray', colors: ['#a8dcff', '#3f9bd6'], home: 'river' },
-  { id: 'jigglypuff', name: 'Jigglypuff', category: 'pokemon', emoji: '🎵', ability: 'Sleepy Song', colors: ['#ffc0e0', '#f58ab8'], home: 'village' },
-  { id: 'snorlax', name: 'Snorlax', category: 'pokemon', emoji: '😴', ability: 'Giant Nap', colors: ['#b7c4d6', '#5c7186'], home: 'mountain' },
-  { id: 'meowth', name: 'Meowth', category: 'pokemon', emoji: '💰', ability: 'Coin Charm', colors: ['#ffe9b0', '#d6a54a'], home: 'city' },
-  { id: 'mewtwo', name: 'Mewtwo', category: 'pokemon', emoji: '🔮', ability: 'Mind Power', colors: ['#d3b8ff', '#8a5cf6'], home: 'lab' },
-  { id: 'lucario', name: 'Lucario', category: 'pokemon', emoji: '🥋', ability: 'Aura Sense', colors: ['#8fd6ff', '#2f6fb5'], home: 'mountain' },
-  { id: 'greninja', name: 'Greninja', category: 'pokemon', emoji: '🌊', ability: 'Swift Ninja', colors: ['#7fb8e8', '#254e8a'], home: 'river' },
-  { id: 'gengar', name: 'Gengar', category: 'pokemon', emoji: '👻', ability: 'Shadow Tricks', colors: ['#c2a8e8', '#5b3d8f'], home: 'forest' },
-  { id: 'piplup', name: 'Piplup', category: 'pokemon', emoji: '🐧', ability: 'Ice Walker', colors: ['#b9e6ff', '#4d9fd6'], home: 'river' },
-
-  // ───────────────────────── Superheroes ─────────────────────────
   {
-    id: 'ironman',
-    name: 'Iron Man',
-    category: 'heroes',
-    emoji: '🤖',
-    ability: 'Build & Power',
-    colors: ['#ff6b5a', '#c22a1c'],
+    id: 'elsa',
+    name: 'Elsa',
+    category: 'disney',
+    ability: 'Ice Magic',
+    hint: 'Freeze river water into a solid ice bridge',
     playable: true,
-    missionId: 'm-ironman',
-    home: 'lab',
+    home: 'frozen',
   },
   {
     id: 'spiderman',
     name: 'Spider-Man',
     category: 'heroes',
-    emoji: '🕷️',
-    ability: 'Web Slinging',
-    colors: ['#ff5a6e', '#1f4fb8'],
+    ability: 'Web Swing',
+    hint: 'Grapple to glowing anchors and swing up high ledges',
     playable: true,
-    missionId: 'm-spiderman',
-    home: 'river',
+    home: 'frozen',
   },
-  { id: 'hulk', name: 'Hulk', category: 'heroes', emoji: '💪', ability: 'Mega Strength', colors: ['#9fe870', '#3f9a35'], home: 'mountain' },
-  { id: 'thor', name: 'Thor', category: 'heroes', emoji: '🔨', ability: 'Thunder Strike', colors: ['#9bc4ff', '#3a63b8'], home: 'castle' },
-  { id: 'cap', name: 'Captain America', category: 'heroes', emoji: '🛡️', ability: 'Shield Guard', colors: ['#8fb8ff', '#2a4ea8'], home: 'village' },
-  { id: 'blackpanther', name: 'Black Panther', category: 'heroes', emoji: '🐾', ability: 'Silent Speed', colors: ['#a9a4ff', '#3a3170'], home: 'forest' },
-  { id: 'batman', name: 'Batman', category: 'heroes', emoji: '🦇', ability: 'Detective Mind', colors: ['#8f9bb3', '#2b3446'], home: 'city' },
-  { id: 'superman', name: 'Superman', category: 'heroes', emoji: '🦸', ability: 'Sky Flight', colors: ['#8ab8ff', '#c33b3b'], home: 'city' },
-  { id: 'wonderwoman', name: 'Wonder Woman', category: 'heroes', emoji: '⚔️', ability: 'Truth Lasso', colors: ['#ffb36b', '#c33b6b'], home: 'castle' },
-  { id: 'ben10', name: 'Ben 10', category: 'heroes', emoji: '⌚', ability: 'Alien Switch', colors: ['#a7f36b', '#2f9a4a'], home: 'lab' },
-
-  // ───────────────────────── Disney & Fantasy ─────────────────────────
   {
-    id: 'elsa',
-    name: 'Elsa',
-    category: 'disney',
-    emoji: '❄️',
-    ability: 'Ice Magic',
-    colors: ['#a5e9ff', '#5b8def'],
+    id: 'ironman',
+    name: 'Iron Man',
+    category: 'heroes',
+    ability: 'Jet Thrusters',
+    hint: 'Hold Ability to fly · repair machines with collected parts',
     playable: true,
-    missionId: 'm-elsa',
-    home: 'river',
+    home: 'frozen',
   },
-  { id: 'anna', name: 'Anna', category: 'disney', emoji: '🧣', ability: 'Fearless Heart', colors: ['#ffb3a7', '#e0755f'], home: 'castle' },
-  { id: 'olaf', name: 'Olaf', category: 'disney', emoji: '⛄', ability: 'Warm Hugs', colors: ['#e8f6ff', '#9fc9e8'], home: 'river' },
+  {
+    id: 'shinchan',
+    name: 'Shinchan',
+    category: 'cartoons',
+    ability: 'Silly Dance',
+    hint: 'Find lost toys with E · dance to make everyone giggle',
+    playable: true,
+    home: 'village',
+  },
   {
     id: 'barbie',
     name: 'Barbie',
     category: 'disney',
-    emoji: '👗',
-    ability: 'Creative Designer',
-    colors: ['#ff9ed2', '#f4529f'],
+    ability: 'Style Switch',
+    hint: 'Plant flowers with E · press Q to change the outfit',
     playable: true,
-    missionId: 'm-barbie',
-    home: 'castle',
+    home: 'forest',
   },
-  { id: 'moana', name: 'Moana', category: 'disney', emoji: '🌺', ability: 'Ocean Navigator', colors: ['#7fe3d0', '#1f9fb5'], home: 'river' },
-  { id: 'rapunzel', name: 'Rapunzel', category: 'disney', emoji: '💇', ability: 'Glowing Hair', colors: ['#ffe9a8', '#d9a63c'], home: 'castle' },
-  { id: 'cinderella', name: 'Cinderella', category: 'disney', emoji: '👠', ability: 'Dance Grace', colors: ['#d6e4ff', '#8fa8e8'], home: 'castle' },
-  { id: 'ariel', name: 'Ariel', category: 'disney', emoji: '🧜', ability: 'Sea Song', colors: ['#ffb0d4', '#2fb9a8'], home: 'river' },
-  { id: 'tinkerbell', name: 'Tinker Bell', category: 'disney', emoji: '🧚', ability: 'Pixie Dust', colors: ['#d8ffb0', '#7bc94a'], home: 'forest' },
-  { id: 'simba', name: 'Simba', category: 'disney', emoji: '🦁', ability: 'Brave Roar', colors: ['#ffd08a', '#d98a2b'], home: 'mountain' },
-  { id: 'mufasa', name: 'Mufasa', category: 'disney', emoji: '👑', ability: 'Wise Leader', colors: ['#ffc46b', '#b06a1f'], home: 'mountain' },
-  { id: 'toothless', name: 'Toothless', category: 'disney', emoji: '🐲', ability: 'Night Flight', colors: ['#a8b6d6', '#2c3550'], home: 'mountain' },
-  { id: 'hiccup', name: 'Hiccup', category: 'disney', emoji: '🦿', ability: 'Dragon Trainer', colors: ['#b8d6a0', '#5f8f4a'], home: 'mountain' },
-  { id: 'harry', name: 'Harry Potter', category: 'disney', emoji: '🪄', ability: 'Spellcasting', colors: ['#d9b8ff', '#6b3fa0'], home: 'castle' },
-  { id: 'hermione', name: 'Hermione', category: 'disney', emoji: '📚', ability: 'Book Genius', colors: ['#e8c48a', '#9c6b2f'], home: 'castle' },
-  { id: 'ron', name: 'Ron', category: 'disney', emoji: '🧙', ability: 'Loyal Friend', colors: ['#ffc08a', '#b85f2f'], home: 'castle' },
-
-  // ───────────────────────── Indian Cartoons ─────────────────────────
   {
     id: 'bheem',
     name: 'Chhota Bheem',
     category: 'indian',
-    emoji: '🏹',
-    ability: 'Laddoo Strength',
-    colors: ['#ffcf6b', '#e07a1f'],
+    ability: 'Super Strength',
+    hint: 'Lift crates with E and carry them to the village hearth',
     playable: true,
-    missionId: 'm-bheem',
     home: 'village',
   },
-  { id: 'chutki', name: 'Chutki', category: 'indian', emoji: '🌸', ability: 'Flower Charm', colors: ['#ffc0cb', '#e8688f'], home: 'village' },
-  { id: 'raju', name: 'Raju', category: 'indian', emoji: '🧒', ability: 'Fast Runner', colors: ['#9fe0c0', '#3f9a6b'], home: 'village' },
-  { id: 'jaggu', name: 'Jaggu', category: 'indian', emoji: '🐒', ability: 'Tree Swings', colors: ['#ffd9a0', '#b07a35'], home: 'forest' },
-  { id: 'motu', name: 'Motu', category: 'indian', emoji: '🥞', ability: 'Big Appetite', colors: ['#ffd166', '#e08f2b'], home: 'village' },
-  { id: 'patlu', name: 'Patlu', category: 'indian', emoji: '🧅', ability: 'Clever Plans', colors: ['#b8e0a0', '#5f9a4a'], home: 'village' },
-  { id: 'shiva', name: 'Shiva', category: 'indian', emoji: '🚴', ability: 'Daring Stunts', colors: ['#8fd0ff', '#2f7fb5'], home: 'city' },
-  { id: 'hattori', name: 'Ninja Hattori', category: 'indian', emoji: '🥷', ability: 'Ninja Moves', colors: ['#a0b8d8', '#3a4a6b'], home: 'forest' },
-  { id: 'kenichi', name: 'Kenichi', category: 'indian', emoji: '🎽', ability: 'Lucky Guess', colors: ['#ffd9b0', '#d98a52'], home: 'city' },
-  { id: 'singham', name: 'Little Singham', category: 'indian', emoji: '🚔', ability: 'Justice Charge', colors: ['#ffb072', '#c94a2b'], home: 'city' },
-  { id: 'mightyraju', name: 'Mighty Raju', category: 'indian', emoji: '💫', ability: 'Super Speed', colors: ['#8fe8e0', '#2f9a9a'], home: 'city' },
-  { id: 'roll21', name: 'Roll No. 21', category: 'indian', emoji: '🎒', ability: 'Classroom Capers', colors: ['#c2b0ff', '#6b4fb0'], home: 'city' },
-  { id: 'tenali', name: 'Tenali Rama', category: 'indian', emoji: '🪔', ability: 'Witty Riddles', colors: ['#ffd98a', '#c28a2b'], home: 'castle' },
-  { id: 'pakdam', name: 'Pakdam Pakdai', category: 'indian', emoji: '🐕', ability: 'Chase Champion', colors: ['#d8c0a0', '#8a6848'], home: 'village' },
-
-  // ───────────────────────── Popular Favourites ─────────────────────────
-  { id: 'bluey', name: 'Bluey', category: 'popular', emoji: '🐶', ability: 'Play Ideas', colors: ['#9fd8ff', '#3f8fd8'], home: 'village' },
-  { id: 'bingo', name: 'Bingo', category: 'popular', emoji: '🐕', ability: 'Little Giggles', colors: ['#ffc9a0', '#e08a52'], home: 'village' },
-  { id: 'peppa', name: 'Peppa Pig', category: 'popular', emoji: '🐷', ability: 'Puddle Jump', colors: ['#ffb3d9', '#e86ba8'], home: 'village' },
-  { id: 'george', name: 'George', category: 'popular', emoji: '🐽', ability: 'Dino Roar', colors: ['#ffe0b3', '#d9a05a'], home: 'village' },
-  { id: 'spongebob', name: 'SpongeBob', category: 'popular', emoji: '🧽', ability: 'Bubble Blowing', colors: ['#ffe98a', '#d9b83c'], home: 'river' },
-  { id: 'patrick', name: 'Patrick', category: 'popular', emoji: '⭐', ability: 'Silly Ideas', colors: ['#ffb3c9', '#e86b9a'], home: 'river' },
-  { id: 'sandy', name: 'Sandy', category: 'popular', emoji: '🐿️', ability: 'Science Fun', colors: ['#c9e8a0', '#7fa84a'], home: 'lab' },
-  { id: 'chase', name: 'Chase', category: 'popular', emoji: '🐕‍🦺', ability: 'Sniff & Solve', colors: ['#a8c8ff', '#3f63b5'], home: 'city' },
-  { id: 'marshall', name: 'Marshall', category: 'popular', emoji: '🚒', ability: 'Fire Rescue', colors: ['#ff9a8a', '#d94a3a'], home: 'village' },
-  { id: 'skye', name: 'Skye', category: 'popular', emoji: '🚁', ability: 'Sky Rescue', colors: ['#ffc2e8', '#c96bb5'], home: 'mountain' },
-  { id: 'rubble', name: 'Rubble', category: 'popular', emoji: '🚜', ability: 'Dig & Build', colors: ['#ffe08a', '#c9a03c'], home: 'village' },
-  { id: 'kevin', name: 'Kevin', category: 'popular', emoji: '🍌', ability: 'Banana Plans', colors: ['#ffe98a', '#d9b83c'], home: 'lab' },
-  { id: 'stuart', name: 'Stuart', category: 'popular', emoji: '🎸', ability: 'Rock Star', colors: ['#c9b3ff', '#7a5ce8'], home: 'lab' },
-  { id: 'bob', name: 'Bob', category: 'popular', emoji: '🧸', ability: 'Teddy Hugs', colors: ['#b3e8ff', '#4f9fd8'], home: 'lab' },
-  { id: 'sonic', name: 'Sonic', category: 'popular', emoji: '💨', ability: 'Sonic Speed', colors: ['#8fc9ff', '#2f5fd8'], home: 'mountain' },
-  { id: 'tails', name: 'Tails', category: 'popular', emoji: '🦊', ability: 'Flying Tails', colors: ['#ffd48a', '#d98a2b'], home: 'mountain' },
-  { id: 'knuckles', name: 'Knuckles', category: 'popular', emoji: '✊', ability: 'Power Punch', colors: ['#ff9a8a', '#c94a3a'], home: 'mountain' },
-  { id: 'mario', name: 'Mario', category: 'popular', emoji: '🍄', ability: 'Jump Master', colors: ['#ff8a8a', '#d92b2b'], home: 'city' },
-  { id: 'luigi', name: 'Luigi', category: 'popular', emoji: '👻', ability: 'Ghost Courage', colors: ['#a0e8a0', '#3f9a4a'], home: 'city' },
-  { id: 'peach', name: 'Princess Peach', category: 'popular', emoji: '🍑', ability: 'Royal Kindness', colors: ['#ffb3d9', '#e86bb5'], home: 'castle' },
-  { id: 'yoshi', name: 'Yoshi', category: 'popular', emoji: '🦖', ability: 'Egg Toss', colors: ['#b3f0a0', '#4fbf3f'], home: 'forest' },
-  { id: 'po', name: 'Po', category: 'popular', emoji: '🐼', ability: 'Kung Fu Kick', colors: ['#ffd9a0', '#c98a4a'], home: 'mountain' },
-  { id: 'tigress', name: 'Tigress', category: 'popular', emoji: '🐯', ability: 'Silent Strike', colors: ['#ffb36b', '#d96b1f'], home: 'mountain' },
-  { id: 'naruto', name: 'Naruto', category: 'popular', emoji: '🍥', ability: 'Shadow Clones', colors: ['#ffc46b', '#e8861f'], home: 'forest' },
-  { id: 'sasuke', name: 'Sasuke', category: 'popular', emoji: '⚡', ability: 'Lightning Blade', colors: ['#b3b3ff', '#4a3fa8'], home: 'forest' },
-  { id: 'sakura', name: 'Sakura', category: 'popular', emoji: '🌸', ability: 'Healing Hands', colors: ['#ffb3d0', '#e85b8f'], home: 'forest' },
-  { id: 'goku', name: 'Goku', category: 'popular', emoji: '🥋', ability: 'Energy Blast', colors: ['#ffb36b', '#d95a1f'], home: 'mountain' },
-  { id: 'vegeta', name: 'Vegeta', category: 'popular', emoji: '🔥', ability: 'Royal Pride', colors: ['#a8b8ff', '#3f4fa8'], home: 'mountain' },
-  { id: 'gohan', name: 'Gohan', category: 'popular', emoji: '📖', ability: 'Hidden Power', colors: ['#c9e8a0', '#6f9a3f'], home: 'mountain' },
-  { id: 'luffy', name: 'Luffy', category: 'popular', emoji: '🏴‍☠️', ability: 'Stretchy Arms', colors: ['#ff9a8a', '#d94a2b'], home: 'river' },
-  { id: 'zoro', name: 'Zoro', category: 'popular', emoji: '⚔️', ability: 'Three Swords', colors: ['#a0e8c0', '#2f9a6b'], home: 'river' },
-  { id: 'nami', name: 'Nami', category: 'popular', emoji: '🧭', ability: 'Weather Sense', colors: ['#ffc78a', '#d98a2b'], home: 'river' },
-  { id: 'hellokitty', name: 'Hello Kitty', category: 'popular', emoji: '🎀', ability: 'Friendship Bow', colors: ['#ffd9e8', '#e86b9a'], home: 'castle' },
-  { id: 'kuromi', name: 'Kuromi', category: 'popular', emoji: '💜', ability: 'Mischief Magic', colors: ['#d9b3ff', '#8a5ce8'], home: 'castle' },
-  { id: 'mymelody', name: 'My Melody', category: 'popular', emoji: '🐰', ability: 'Sweet Baking', colors: ['#ffc9d9', '#e8688f'], home: 'castle' },
-  { id: 'finn', name: 'Finn', category: 'popular', emoji: '🗡️', ability: 'Hero Heart', colors: ['#a8e8ff', '#2f9ad8'], home: 'forest' },
-  { id: 'jake', name: 'Jake', category: 'popular', emoji: '🐕', ability: 'Stretchy Shape', colors: ['#ffe08a', '#d9a03c'], home: 'forest' },
 ];
 
-export const characterById = (id: string) => characters.find((c) => c.id === id);
-export const missionCharacters = characters.filter((c) => c.playable);
+/** Extra friends for the catalogue — visible with their story still to come. */
+const COMING: Omit<CharacterDef, 'playable'>[] = [
+  { id: 'nobita', name: 'Nobita', category: 'cartoons', ability: 'Quick Thinking', hint: '', home: 'village' },
+  { id: 'shizuka', name: 'Shizuka', category: 'cartoons', ability: 'Kind Helper', hint: '', home: 'village' },
+  { id: 'gian', name: 'Gian', category: 'cartoons', ability: 'Big Voice', hint: '', home: 'village' },
+  { id: 'suneo', name: 'Suneo', category: 'cartoons', ability: 'Clever Trader', hint: '', home: 'village' },
+  { id: 'himawari', name: 'Himawari', category: 'cartoons', ability: 'Shiny Things', hint: '', home: 'village' },
+  { id: 'kazama', name: 'Kazama', category: 'cartoons', ability: 'Fact Finder', hint: '', home: 'village' },
+  { id: 'heidi', name: 'Heidi', category: 'cartoons', ability: 'Mountain Guide', hint: '', home: 'mountain' },
+  { id: 'peter', name: 'Peter', category: 'cartoons', ability: 'Goat Whisperer', hint: '', home: 'mountain' },
+  { id: 'tom', name: 'Tom', category: 'cartoons', ability: 'Sneaky Pounce', hint: '', home: 'village' },
+  { id: 'jerry', name: 'Jerry', category: 'cartoons', ability: 'Tiny Escape', hint: '', home: 'village' },
+  { id: 'mickey', name: 'Mickey Mouse', category: 'cartoons', ability: 'Magic Conductor', hint: '', home: 'castle' },
+  { id: 'minnie', name: 'Minnie Mouse', category: 'cartoons', ability: 'Style Sparkle', hint: '', home: 'castle' },
+  { id: 'ash', name: 'Ash', category: 'pokemon', ability: 'Never Give Up', hint: '', home: 'pokemon' },
+  { id: 'eevee', name: 'Eevee', category: 'pokemon', ability: 'Many Evolutions', hint: '', home: 'pokemon' },
+  { id: 'charizard', name: 'Charizard', category: 'pokemon', ability: 'Blazing Wings', hint: '', home: 'pokemon' },
+  { id: 'bulbasaur', name: 'Bulbasaur', category: 'pokemon', ability: 'Vine Growth', hint: '', home: 'pokemon' },
+  { id: 'squirtle', name: 'Squirtle', category: 'pokemon', ability: 'Water Spray', hint: '', home: 'pokemon' },
+  { id: 'jigglypuff', name: 'Jigglypuff', category: 'pokemon', ability: 'Sleepy Song', hint: '', home: 'pokemon' },
+  { id: 'snorlax', name: 'Snorlax', category: 'pokemon', ability: 'Giant Nap', hint: '', home: 'pokemon' },
+  { id: 'meowth', name: 'Meowth', category: 'pokemon', ability: 'Coin Charm', hint: '', home: 'pokemon' },
+  { id: 'mewtwo', name: 'Mewtwo', category: 'pokemon', ability: 'Mind Power', hint: '', home: 'pokemon' },
+  { id: 'lucario', name: 'Lucario', category: 'pokemon', ability: 'Aura Sense', hint: '', home: 'pokemon' },
+  { id: 'greninja', name: 'Greninja', category: 'pokemon', ability: 'Swift Ninja', hint: '', home: 'pokemon' },
+  { id: 'hulk', name: 'Hulk', category: 'heroes', ability: 'Mega Strength', hint: '', home: 'city' },
+  { id: 'thor', name: 'Thor', category: 'heroes', ability: 'Thunder Strike', hint: '', home: 'castle' },
+  { id: 'cap', name: 'Captain America', category: 'heroes', ability: 'Shield Guard', hint: '', home: 'city' },
+  { id: 'blackpanther', name: 'Black Panther', category: 'heroes', ability: 'Silent Speed', hint: '', home: 'forest' },
+  { id: 'batman', name: 'Batman', category: 'heroes', ability: 'Detective Mind', hint: '', home: 'city' },
+  { id: 'superman', name: 'Superman', category: 'heroes', ability: 'Sky Flight', hint: '', home: 'city' },
+  { id: 'wonderwoman', name: 'Wonder Woman', category: 'heroes', ability: 'Truth Lasso', hint: '', home: 'castle' },
+  { id: 'ben10', name: 'Ben 10', category: 'heroes', ability: 'Alien Switch', hint: '', home: 'lab' },
+  { id: 'anna', name: 'Anna', category: 'disney', ability: 'Fearless Heart', hint: '', home: 'frozen' },
+  { id: 'olaf', name: 'Olaf', category: 'disney', ability: 'Warm Hugs', hint: '', home: 'frozen' },
+  { id: 'moana', name: 'Moana', category: 'disney', ability: 'Ocean Navigator', hint: '', home: 'ocean' },
+  { id: 'rapunzel', name: 'Rapunzel', category: 'disney', ability: 'Glowing Hair', hint: '', home: 'castle' },
+  { id: 'cinderella', name: 'Cinderella', category: 'disney', ability: 'Dance Grace', hint: '', home: 'castle' },
+  { id: 'ariel', name: 'Ariel', category: 'disney', ability: 'Sea Song', hint: '', home: 'ocean' },
+  { id: 'tinkerbell', name: 'Tinker Bell', category: 'disney', ability: 'Pixie Dust', hint: '', home: 'forest' },
+  { id: 'simba', name: 'Simba', category: 'disney', ability: 'Brave Roar', hint: '', home: 'mountain' },
+  { id: 'toothless', name: 'Toothless', category: 'disney', ability: 'Night Flight', hint: '', home: 'mountain' },
+  { id: 'hiccup', name: 'Hiccup', category: 'disney', ability: 'Dragon Trainer', hint: '', home: 'mountain' },
+  { id: 'harry', name: 'Harry Potter', category: 'disney', ability: 'Spellcasting', hint: '', home: 'castle' },
+  { id: 'hermione', name: 'Hermione', category: 'disney', ability: 'Book Genius', hint: '', home: 'castle' },
+  { id: 'chutki', name: 'Chutki', category: 'indian', ability: 'Flower Charm', hint: '', home: 'village' },
+  { id: 'raju', name: 'Raju', category: 'indian', ability: 'Fast Runner', hint: '', home: 'village' },
+  { id: 'jaggu', name: 'Jaggu', category: 'indian', ability: 'Tree Swings', hint: '', home: 'forest' },
+  { id: 'motu', name: 'Motu', category: 'indian', ability: 'Big Appetite', hint: '', home: 'village' },
+  { id: 'patlu', name: 'Patlu', category: 'indian', ability: 'Clever Plans', hint: '', home: 'village' },
+  { id: 'shiva', name: 'Shiva', category: 'indian', ability: 'Daring Stunts', hint: '', home: 'city' },
+  { id: 'hattori', name: 'Ninja Hattori', category: 'indian', ability: 'Ninja Moves', hint: '', home: 'forest' },
+  { id: 'kenichi', name: 'Kenichi', category: 'indian', ability: 'Lucky Guess', hint: '', home: 'village' },
+  { id: 'singham', name: 'Little Singham', category: 'indian', ability: 'Justice Charge', hint: '', home: 'city' },
+  { id: 'mightyraju', name: 'Mighty Raju', category: 'indian', ability: 'Super Speed', hint: '', home: 'city' },
+  { id: 'tenali', name: 'Tenali Rama', category: 'indian', ability: 'Witty Riddles', hint: '', home: 'castle' },
+  { id: 'roll21', name: 'Roll No. 21', category: 'indian', ability: 'Classroom Capers', hint: '', home: 'city' },
+  { id: 'bluey', name: 'Bluey', category: 'popular', ability: 'Play Ideas', hint: '', home: 'village' },
+  { id: 'bingo', name: 'Bingo', category: 'popular', ability: 'Little Giggles', hint: '', home: 'village' },
+  { id: 'peppa', name: 'Peppa Pig', category: 'popular', ability: 'Puddle Jump', hint: '', home: 'village' },
+  { id: 'george', name: 'George', category: 'popular', ability: 'Dino Roar', hint: '', home: 'village' },
+  { id: 'spongebob', name: 'SpongeBob', category: 'popular', ability: 'Bubble Blowing', hint: '', home: 'ocean' },
+  { id: 'patrick', name: 'Patrick', category: 'popular', ability: 'Silly Ideas', hint: '', home: 'ocean' },
+  { id: 'chase', name: 'Chase', category: 'popular', ability: 'Sniff & Solve', hint: '', home: 'city' },
+  { id: 'marshall', name: 'Marshall', category: 'popular', ability: 'Fire Rescue', hint: '', home: 'village' },
+  { id: 'skye', name: 'Skye', category: 'popular', ability: 'Sky Rescue', hint: '', home: 'mountain' },
+  { id: 'kevin', name: 'Kevin', category: 'popular', ability: 'Banana Plans', hint: '', home: 'lab' },
+  { id: 'stuart', name: 'Stuart', category: 'popular', ability: 'Rock Star', hint: '', home: 'lab' },
+  { id: 'bob', name: 'Bob', category: 'popular', ability: 'Teddy Hugs', hint: '', home: 'lab' },
+  { id: 'sonic', name: 'Sonic', category: 'popular', ability: 'Sonic Speed', hint: '', home: 'mountain' },
+  { id: 'tails', name: 'Tails', category: 'popular', ability: 'Flying Tails', hint: '', home: 'mountain' },
+  { id: 'mario', name: 'Mario', category: 'popular', ability: 'Jump Master', hint: '', home: 'city' },
+  { id: 'luigi', name: 'Luigi', category: 'popular', ability: 'Ghost Courage', hint: '', home: 'city' },
+  { id: 'yoshi', name: 'Yoshi', category: 'popular', ability: 'Egg Toss', hint: '', home: 'forest' },
+  { id: 'po', name: 'Po', category: 'popular', ability: 'Kung Fu Kick', hint: '', home: 'mountain' },
+  { id: 'naruto', name: 'Naruto', category: 'popular', ability: 'Shadow Clones', hint: '', home: 'forest' },
+  { id: 'goku', name: 'Goku', category: 'popular', ability: 'Energy Blast', hint: '', home: 'mountain' },
+  { id: 'luffy', name: 'Luffy', category: 'popular', ability: 'Stretchy Arms', hint: '', home: 'ocean' },
+  { id: 'hellokitty', name: 'Hello Kitty', category: 'popular', ability: 'Friendship Bow', hint: '', home: 'castle' },
+  { id: 'finn', name: 'Finn', category: 'popular', ability: 'Hero Heart', hint: '', home: 'forest' },
+];
+
+export const ALL_CHARACTERS: CharacterDef[] = [
+  ...PLAYABLE,
+  ...COMING.map((c) => ({ ...c, playable: false })),
+];
+
+export const characterById = (id: string) => ALL_CHARACTERS.find((c) => c.id === id);
+export const playableById = (id: string) => PLAYABLE.find((c) => c.id === id);

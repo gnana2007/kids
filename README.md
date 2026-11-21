@@ -1,137 +1,139 @@
-# CharacterVerse
+# CharacterVerse — One World. Many Adventures.
 
-**One World. Many Characters. Endless Adventures.**
+A genuinely playable **2D platformer-adventure** for children. The island of Everlight is one
+connected world: you pick a beloved hero (Doraemon, Pikachu, Elsa, Spider-Man, Iron Man,
+Shinchan, Barbie, Chhota Bheem), walk, jump and use that hero's **real ability**, and every
+change you make — lamps lit, gears fitted, ice bridges frozen, machines repaired — stays
+**visible to every other hero** and survives reloads.
 
-A playable children's adventure game built with React, Vite, TypeScript, Tailwind CSS and Framer Motion.
-Choose a hero, solve a hands-on challenge, and watch the shared island of CharacterVerse change because of
-what you did.
+This is a working game, not a mockup: Phaser 3 drives movement, physics, collisions,
+abilities, missions and the animated world. React only draws the menus, HUD and touch
+controls around the canvas.
 
 ---
 
-## Run it
+## Play it
 
 ```bash
-npm install
-npm run dev      # http://localhost:5173
-npm run build    # type-check + production bundle in dist/
-npm run preview  # serve the production build
+npm install        # installs dependencies
+npm run dev        # → http://localhost:5173
 ```
 
-No backend, accounts, API keys or network calls are used at runtime. Progress lives in `localStorage`
-(key: `characterverse:progress:v1`).
+Production build & preview:
 
----
+```bash
+npm run build      # type-checks + bundles to dist/
+npm run preview    # → http://localhost:4173
+```
 
-## What is playable
+## Controls
 
-### The shared story — “The Storm on the River”
+| Action | Desktop | Touch |
+| --- | --- | --- |
+| Walk | `←` `→` / `A` `D` | Virtual joystick (left) |
+| Jump (hold for higher) | `Space` / `W` | JUMP button |
+| Pick up / talk / plant / carry / rescue | `E` | E button |
+| Hero ability | `Q` | Q button (hold) |
 
-Five linked chapters, each unlocking the next. Every chapter permanently changes the island map.
+Hero abilities are physical, not quiz-based:
 
-| Ch. | Hero        | Challenge                                        | World change                  |
-| --- | ----------- | ------------------------------------------------ | ----------------------------- |
-| 1   | Elsa        | Freeze a connected ice path across the river     | Ice path appears              |
-| 2   | Doraemon    | Pick the right gadget for each riverside job     | Gadget crane on the bank      |
-| 3   | Spider-Man  | Anchor a web bridge on strong bolts only         | Web bridge over the gorge     |
-| 4   | Iron Man    | Assemble the village power machine               | Village windows light up      |
-| 5   | Chhota Bheem| Deliver each rescue supply to the right place    | Villagers back home           |
+- **Doraemon – Gadget Pocket:** the magnet pulls iron gears across the world; holding jump
+  in the air glides with the Bamboo Copter.
+- **Pikachu – Thunder Zap:** standing near a lamp post (or pressing `Q`) charges it with a
+  bolt of lightning.
+- **Elsa – Ice Magic:** freeze river water into a solid, walkable ice bridge.
+- **Spider-Man – Web Swing:** grapple a glowing anchor and swing up to high ledges.
+- **Iron Man – Jet Thrusters:** hold `Q` in the air to fly; repair machines with parts.
+- **Shinchan – Silly Dance:** makes everyone giggle; hunt the three lost toys.
+- **Barbie – Style Switch:** changes outfit sparkles; plant flowers in the garden beds.
+- **Chhota Bheem – Super Strength:** lift wood crates and carry them to the hearth.
 
-Completing all five also awards the **🌟 Island Guardian** badge.
+## The shared world
 
-### Side adventures
+Everything is saved locally (`localStorage`, key `characterverse:world:v1`) the moment it
+happens. Flags drive the world's look and physics:
 
-| Hero     | Challenge                                            | World change                 |
-| -------- | ---------------------------------------------------- | ---------------------------- |
-| Pikachu  | Build a circuit in the right order + conduction test | Lightning Hill lamps light   |
-| Shinchan | Solve four clue puzzles                              | Lantern City mystery solved  |
-| Barbie   | Design a gala look with colour harmony               | Castle gala bunting appears  |
+| Mission | World change |
+| --- | --- |
+| The Windmill's Gears (Doraemon) | Windmill blades spin again |
+| Lights of Village Square (Pikachu) | Lamps glow gold |
+| The Missing Toys (Shinchan) | Toys gather at the playground |
+| Firewood for the Hearth (Bheem) | Hearth fire blazes |
+| Bloom the Whisper Garden (Barbie) | Garden flowers bloom |
+| Bridge of Ice (Elsa) | A walkable ice bridge appears (for everyone) |
+| Snowbound Friends (Spider-Man) | Rescued friends warm up by the castle |
+| The Frozen Generator (Iron Man) | Generator hums with light |
 
-### Games technology
+Because the world is one continuous map (Cartoon Village → Magical Forest → Frozen
+Kingdom), you can switch heroes mid-run from the HUD: the island stays exactly as you left
+it. The River blocks the Frozen Kingdom until Elsa builds her bridge — a designed
+"switch heroes" moment.
 
-Every challenge is a real, stateful mini-game — no static mockups:
-
-- **Path puzzle** (`PathGame`) — grids, flood-fill connectivity, shortest-path star scoring
-- **Choice rounds** (`ChoiceGame`) — clue questions with hints and retries
-- **Circuit builder** (`CircuitGame`) — ordered node tapping with animated current + material quiz
-- **Anchor puzzle** (`WebGame`) — weak vs. strong anchors, SVG web lines drawn as you go
-- **Part matching** (`MatchGame`) — HTML5 drag-and-drop *and* tap-a-part-then-a-slot for touch
-- **Design studio** (`DesignGame`) — live SVG outfit preview; colour-harmony scoring teaches colour theory
-
-Stars: 3 per mission, fewer for fumbles (except the design studio, which rewards colour harmony).
-Best scores persist.
-
----
-
-## The character catalogue
-
-`src/game/characters.ts` holds **89 characters** across six categories — Classic Cartoons, Pokémon,
-Superheroes, Disney & Fantasy, Indian Cartoons and Popular Favourites. The eight playable heroes are
-marked `playable`; everyone else is a selectable preview with a friendly “story still being written”
-sheet.
-
-The catalogue is data-driven: add a character object and (optionally) a mission in
-`src/game/missions.ts` to make it playable.
-
----
-
-## Project structure
+## Architecture
 
 ```
 src/
-  components/
-    Navbar, CharacterCard, CharacterGrid, CharacterAvatar, StarRow,
-    WorldMap (SVG island + interactive pins), MissionCard,
-    GameInteraction (dispatcher), RewardPopup, Sparkles / StarField
-    games/   ChoiceGame, PathGame, CircuitGame, WebGame, MatchGame, DesignGame
-  game/
-    characters.ts   catalogue + categories
-    missions.ts     missions, locations, story order, learning lines
-    types.ts        discriminated-union game configs
-    progress.tsx    localStorage progress context (stars, badges, world flags)
-    worldChanges.ts names of the visual changes for each flag
-    useSfx.ts       tiny WebAudio sound kit (no assets)
-  pages/
-    Home, CharacterSelection, WorldMapPage, Adventure, Results
-  App.tsx / main.tsx
+├─ game/
+│  ├─ characters.ts        # 8 playable heroes + ~80 more shown as "coming soon"
+│  ├─ missions.ts          # 8 character missions -> world flags
+│  ├─ world.ts             # zone data: terrain, platforms, water, things
+│  ├─ save.ts              # localStorage persistence
+│  ├─ input.ts             # shared input state (keyboard + touch)
+│  ├─ bus.ts               # scene ↔ React event bus + HUD state
+│  ├─ sound.ts             # WebAudio sound effects
+│  ├─ scenes/
+│  │  ├─ BootScene.ts      # generates all art textures (no assets to load)
+│  │  └─ WorldScene.ts     # movement, physics, abilities, missions, world state
+│  ├─ art/
+│  │  ├─ sprites.ts        # procedural animated character sheets (8 frames)
+│  │  └─ scenery.ts        # procedural backgrounds, tiles, props, fx
+│  └─ PhaserGame.tsx       # React wrapper that owns one Phaser game
+├─ screens/                # Title, Character Select, Island Map, Game (HUD+overlays)
+└─ ui/                     # shared UI pieces + How-to-play
 ```
 
-Routes: `/` · `/characters` · `/world` · `/adventure/:missionId` · `/results/:missionId`
+Design decisions:
 
-World changes are stored as simple flags (`river-frozen`, `web-bridge`, …) and read by the SVG map, so
-the island rendering is entirely derived from progress.
-
----
+- **No artistic assets to load.** Every sprite, background, prop and effect is drawn with
+  canvas at boot, so the game works offline and has no licensing risk.
+- **Art is honest.** Heroes are stylised, recognisable *placeholder* drawings — they are
+  not official licensed artwork, and the game never claims otherwise.
+- **Missions are exploration, not quizzes.** No multiple choice, no Q&A — every objective
+  is movement, physics or a character power.
+- **Game logic lives in Phaser; React never touches the world** except through the bus
+  (pause, switch hero, HUD state).
 
 ## Testing
 
-`scripts/e2e.mjs` drives the whole game in a real browser (Microsoft Edge via Playwright): it plays all
-eight adventures through to the results screen, checks the learning text, verifies the world-map flags,
-checks the coming-soon sheet and captures desktop + mobile screenshots.
+The game ships Playwright smoke/E2E scripts (edge channel on Windows). They verify real
+gameplay: movement, jumping, E pick-up, grapple, flight, the touch joystick, all 8 mission
+completions, hero switching, zone travel, and persistence across reloads.
 
 ```bash
-npm i -D playwright        # once
-npx vite build && npx vite preview --port 4173
-node scripts/e2e.mjs
+npm run preview          # terminal 1
+URL=http://localhost:4173 npm run test:e2e      # full mission story (8/8)
+URL=http://localhost:4173 node scripts/controls.mjs   # input + travel + touch
+URL=http://localhost:4173 node scripts/smoke.mjs      # quick screen pass
+URL=http://localhost:4173 node scripts/final.mjs      # persistence, hero switch, reset
 ```
 
-It expects `http://localhost:4173` and writes screenshots to `shots/`.
+Pass state: all assertions green, zero console errors/warnings. Screenshots land in `shots/`
+(gitignored).
 
----
+## Status & roadmap
 
-## Design notes
+**Done (playable now):** 8 heroes with abilities, 3 connected lands, 8 missions, shared
+persistent world, character switching, touch controls, procedural art, save/reset, E2E.
 
-- **Kid-first UI**: oversized tap targets, one clear primary action per screen, no dense dashboards.
-- **Accessibility**: semantic buttons/links, `aria-label`s on every icon-only control, visible focus
-  rings, `prefers-reduced-motion` support, text contrast kept readable on the dark sky.
-- **Responsive**: 2-column mobile grids, horizontally scrollable filter chips, SVG game boards that
-  scale with their container.
-- **No external art**: characters are represented by emoji emblems on gradient orbs so the prototype
-  needs no licensed assets. For a commercial release, swap in licensed or original artwork —
-  see “Licensing” below.
+**Not built (intentionally):** Pokémon Forest, Superhero City, Future Laboratory, Mountain
+Village, Magical Castle and Ocean World are shown on the map as previews ("coming soon");
+~80 additional heroes are listed in the catalogue but locked. Adding a land = adding one
+`ZoneDef` to `src/game/world.ts`; adding a hero = one sprite painter + one `MissionDef`.
 
-## Licensing note
+**Licensing note:** replace the procedural sprites with licensed artwork for commercial
+release; the sprite system is a single canvas painter per character, so swapping art is
+contained.
 
-This is a learning prototype. Character names are used as playful references only. For public or
-commercial deployment, use licensed character assets with permission, or replace them with original
-characters inspired by broad archetypes (e.g. “the gadget cat”, “the ice queen”) so nothing protected
-is copied.
+## Built with
+
+React 18 · Vite · TypeScript · Phaser 3.90 · Tailwind CSS · Framer Motion · Lucide.

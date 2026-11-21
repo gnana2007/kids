@@ -1,229 +1,203 @@
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-core';
+import fs from 'node:fs';
 
-const BASE = 'http://localhost:4173';
-const SHOTS = 'D:/Apps/kids/shots';
-const log = (...a) => console.log('•', ...a);
+const URL = process.env.URL || 'http://localhost:4173/';
+const shots = 'shots';
+fs.mkdirSync(shots, { recursive: true });
 
-const browser = await chromium.launch({ channel: 'msedge', headless: true });
-const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
-const page = await ctx.newPage();
+const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--use-gl=angle'] });
+const page = await browser.newPage({ viewport: { width: 1366, height: 800 } });
 const errors = [];
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
-page.on('pageerror', (e) => errors.push('PAGEERROR ' + String(e)));
+page.on('console', (m) => {
+  if (m.type() === 'error' || m.type() === 'warning') errors.push(`[${m.type()}] ${m.text()}`);
+});
+page.on('pageerror', (e) => errors.push(`[pageerror] ${e.message}`));
 
-const shot = async (name) => { await page.waitForTimeout(350); await page.screenshot({ path: `${SHOTS}/${name}.png` }); };
-const must = async (cond, msg) => { if (!(await cond)) throw new Error('FAILED: ' + msg); };
-const vis = async (text, exact = false) => page.getByText(text, { exact }).first().isVisible().catch(() => false);
-
-async function startMission(id) {
-  await page.goto(`${BASE}/adventure/${id}`, { waitUntil: 'networkidle' });
-  await page.getByTestId('start-mission').click();
-  await page.waitForTimeout(300);
+const log = (...a) => console.log(...a);
+const state = () => page.evaluate(() => window.__cv.state());
+const warp = (x, y = 480) => page.evaluate(([x, y]) => window.__cv.warp(x, y), [x, y]);
+const ability = () => page.evaluate(() => window.__cv.ability());
+const interact = () => page.evaluate(() => window.__cv.interact());
+const wait = (ms) => page.waitForTimeout(ms);
+function assert(cond, msg) {
+  if (!cond) throw new Error('ASSERT FAILED: ' + msg);
+  log('  ✓', msg);
 }
 
-async function dismissReward() {
-  const btn = page.getByRole('button', { name: /See what changed/ });
-  if (await btn.isVisible().catch(() => false)) {
-    await btn.click();
-    await page.waitForTimeout(300);
-  }
+await page.goto(URL, { waitUntil: 'networkidle' });
+await page.evaluate(() => localStorage.clear());
+await page.reload({ waitUntil: 'networkidle' });
+await wait(600);
+await page.getByRole('button', { name: /Start Adventure/ }).click();
+await wait(400);
+await page.screenshot({ path: `${shots}/02-characters.png` });
+await page.getByRole('button', { name: /Take me to the island/ }).click();
+await wait(400);
+await page.screenshot({ path: `${shots}/03-world.png` });
+await page.getByRole('button', { name: /Walk into Cartoon/i }).click();
+await wait(1500);
+await page.screenshot({ path: `${shots}/04-intro.png` });
+const letsGo = page.getByRole('button', { name: /Let's go/ });
+if (await letsGo.isVisible().catch(() => false)) await letsGo.click();
+await wait(700);
+
+log('\n— Doraemon: magnet 3 gears, repair windmill —');
+let s = await state();
+assert(s.character === 'doraemon' && s.mission === 'm-windmill', 'Doraemon mission active');
+assert(s.markerCount === 3, 'three gear markers visible');
+
+for (const [x, y] of [[720, 500], [1500, 320], [2060, 500]]) {
+  await warp(x, y);
+  await wait(500);
+  await ability();
+  await wait(900);
 }
+s = await state();
+assert(s.progress.length === 3, 'all three gears magneted (' + s.progress.length + ')');
+await page.screenshot({ path: `${shots}/07-doraemon-gears.png` });
 
-async function finishFlow(buttonName) {
-  await page.getByRole('button', { name: buttonName }).first().click();
-  await page.waitForURL('**/results/**');
-  await page.waitForTimeout(500);
-  await dismissReward();
+await warp(430, 500);
+await wait(400);
+assert((await state()).prompt === 'Fit the three gears', 'windmill prompt appears');
+await interact();
+await wait(900);
+s = await state();
+assert(s.flags.includes('windmill'), 'world flag windmill set');
+assert(s.done === true, 'mission marked done');
+await page.screenshot({ path: `${shots}/08-windmill-fixed.png` });
+
+log('\n— Switch hero to Pikachu —');
+await page.evaluate(() => window.__cv.setCharacter('pikachu'));
+await wait(700);
+s = await state();
+assert(s.character === 'pikachu', 'character switched in same world');
+assert(s.mission === 'm-lamps', 'Pikachu mission loaded');
+assert(s.flags.includes('windmill'), 'Doraemon world change persists after switch');
+assert(s.markerCount === 3, 'three lamp markers');
+for (const x of [210, 1010, 1760]) {
+  await warp(x, 500);
+  await wait(350);
+  await ability();
+  await wait(800);
 }
+s = await state();
+assert(s.flags.includes('lamps'), 'lamps lit flag set');
+await page.screenshot({ path: `${shots}/09-lamps.png` });
 
-try {
-  // ── Home ──
-  await page.goto(BASE, { waitUntil: 'networkidle' });
-  await must(vis('CharacterVerse') || true, 'home loaded');
-  await page.getByRole('button', { name: /Start Adventure/ }).click();
-  await page.waitForURL('**/characters');
-  log('home → characters OK');
-
-  // ── Character selection ──
-  await page.getByLabel('Search characters').fill('Elsa');
-  await page.waitForTimeout(250);
-  await page.screenshot({ path: `${SHOTS}/characters-search.png` });
-  await page.locator('button:has(h3:text-is("Elsa"))').first().click();
-  await page.waitForURL('**/adventure/m-elsa');
-  await must(vis('The Frozen River'), 'briefing title');
-  await shot('adventure-brief');
-
-  // ── 1. Elsa path puzzle ──
-  await page.getByTestId('start-mission').click();
-  await page.waitForSelector('[data-testid="path-board"]');
-  for (const [x, y] of [[1, 2], [2, 2], [2, 3], [3, 3], [4, 3], [4, 2]]) {
-    await page.getByTestId(`cell-${x}-${y}`).click();
-  }
-  await page.getByText('The ice path is ready!').waitFor({ timeout: 8000 });
-  await shot('game-elsa');
-  await finishFlow('Walk across');
-  await must(vis('Mission complete'), 'results header');
-  await must(vis('Water turns into solid ice'), 'learning sentence');
-  await shot('results-elsa');
-  await page.getByRole('link', { name: /Continue adventure/ }).click();
-  await page.waitForURL('**/adventure/m-doraemon');
-  log('Elsa done → Doraemon unlocked OK');
-
-  // ── 2. Doraemon choice rounds ──
-  await page.getByTestId('start-mission').click();
-  const doraAnswers = ['a', 'b', 'b', 'c'];
-  for (let i = 0; i < doraAnswers.length; i++) {
-    await page.getByTestId(`option-${doraAnswers[i]}`).click();
-    await page.waitForTimeout(250);
-    const label = i === doraAnswers.length - 1 ? /Finish mission/ : /Next clue/;
-    if (i === 0) await shot('game-doraemon');
-    await page.getByRole('button', { name: label }).click();
-    await page.waitForTimeout(250);
-  }
-  await page.waitForURL('**/results/m-doraemon');
-  log('Doraemon done OK');
-
-  // ── 3. Spider-Man web anchors ──
-  await page.goto(`${BASE}/adventure/m-spiderman`, { waitUntil: 'networkidle' });
-  await page.getByTestId('start-mission').click();
-  for (const id of ['a1', 'a3', 'a5', 'a6']) await page.getByTestId(`anchor-${id}`).click();
-  await page.getByText('The web bridge is swinging').waitFor({ timeout: 8000 });
-  await shot('game-spiderman');
-  await finishFlow('Cross the bridge');
-  log('Spider-Man done OK');
-
-  // ── 4. Iron Man matching ──
-  await page.goto(`${BASE}/adventure/m-ironman`, { waitUntil: 'networkidle' });
-  await page.getByTestId('start-mission').click();
-  for (const [part, slot] of [['p-core', 'core'], ['p-chip', 'chip'], ['p-armor', 'armor'], ['p-glove', 'glove']]) {
-    await page.getByTestId(`part-${part}`).click();
-    await page.getByTestId(`slot-${slot}`).click();
-  }
-  await page.waitForTimeout(700);
-  await page.getByText('Everything is in place!').waitFor({ timeout: 8000 });
-  await shot('game-ironman');
-  await finishFlow('Finish');
-  log('Iron Man done OK');
-
-  // ── 5. Bheem matching + island badge ──
-  await page.goto(`${BASE}/adventure/m-bheem`, { waitUntil: 'networkidle' });
-  await page.getByTestId('start-mission').click();
-  for (const [part, slot] of [['s-hammer', 'roof'], ['s-rice', 'pot'], ['s-water', 'well'], ['s-med', 'clinic']]) {
-    await page.getByTestId(`part-${part}`).click();
-    await page.getByTestId(`slot-${slot}`).click();
-  }
-  await page.waitForTimeout(700);
-  await finishFlow('Finish');
-  await shot('results-bheem');
-  log('Bheem done OK (island badge should be awarded)');
-
-  // ── World map after story ──
-  await page.goto(`${BASE}/world`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(500);
-  await shot('world-map-done');
-  const mapText = await page.locator('body').innerText();
-  for (const label of ['Ice path across the river', 'Web bridge over the gorge', 'Lights bright in the village', 'Villagers back home']) {
-    if (!mapText.includes(label)) throw new Error('World change missing: ' + label);
-  }
-  log('World map shows all story changes OK');
-
-  // ── 6. Pikachu circuit ──
-  await page.goto(`${BASE}/adventure/m-pikachu`, { waitUntil: 'networkidle' });
-  await page.getByTestId('start-mission').click();
-  for (const id of ['battery', 'wire', 'switch', 'coil', 'bulb']) await page.getByTestId(`node-${id}`).click();
-  await page.waitForSelector('[data-testid="bonus-a"]', { timeout: 5000 });
-  await page.getByTestId('bonus-a').click();
-  await shot('game-pikachu');
-  await page.getByRole('button', { name: /Light the lamps/ }).click();
-  await page.waitForURL('**/results/m-pikachu');
-  await page.waitForTimeout(500);
-  await dismissReward();
-  log('Pikachu done OK');
-
-  // ── 7. Shinchan mystery ──
-  await page.goto(`${BASE}/adventure/m-shinchan`, { waitUntil: 'networkidle' });
-  await page.getByTestId('start-mission').click();
-  const shinAnswers = ['a', 'b', 'c', 'c'];
-  for (let i = 0; i < shinAnswers.length; i++) {
-    await page.getByTestId(`option-${shinAnswers[i]}`).click();
-    await page.waitForTimeout(200);
-    await page.getByRole('button', { name: i === shinAnswers.length - 1 ? /Finish mission/ : /Next clue/ }).click();
-    await page.waitForTimeout(200);
-  }
-  await page.waitForURL('**/results/m-shinchan');
-  log('Shinchan done OK');
-
-  // ── 8. Barbie design ──
-  await page.goto(`${BASE}/adventure/m-barbie`, { waitUntil: 'networkidle' });
-  await page.getByTestId('start-mission').click();
-  await page.getByTestId('dress-lilac').click();
-  await page.getByTestId('hair-raven').click();
-  await page.getByTestId('accessory-crown').click();
-  await page.getByTestId('shoes-glass').click();
-  await shot('game-barbie');
-  await page.getByTestId('design-finish').click();
-  await page.waitForURL('**/results/m-barbie');
-  await page.waitForTimeout(500);
-  await dismissReward();
-  log('Barbie done OK');
-
-  // ── Persistence ──
-  const saved = await page.evaluate(() => localStorage.getItem('characterverse:progress:v1'));
-  const parsed = JSON.parse(saved || '{}');
-  const starCount = Object.keys(parsed.stars || {}).length;
-  if (starCount < 8) throw new Error('Progress not saved: ' + starCount);
-  await page.goto(`${BASE}/world`, { waitUntil: 'networkidle' });
-  const navText = await page.locator('header').innerText();
-  log('Saved missions:', starCount, '| navbar:', navText.replace(/\n/g, ' '));
-
-  // ── Coming-soon modal ──
-  await page.goto(`${BASE}/characters`, { waitUntil: 'networkidle' });
-  await page.getByLabel('Search characters').fill('Nobita');
-  await page.waitForTimeout(250);
-  await page.locator('button:has(h3:text-is("Nobita"))').first().click();
-  await page.waitForTimeout(400);
-  await page.getByText(/still being written/).waitFor({ timeout: 8000 });
-  await shot('characters-soon');
-  await page.getByRole('button', { name: /Meet another hero/ }).click();
-
-  // ── Empty location panel (forest) ──
-  await page.goto(`${BASE}/world`, { waitUntil: 'networkidle' });
-  await page.getByRole('button', { name: /Whisper Forest/ }).click();
-  await page.waitForTimeout(350);
-  await must(vis('adventures coming soon'), 'coming soon location panel');
-  await shot('world-forest');
-  log('Empty location panel OK');
-
-  // ── Reset progress ──
-  await page.getByRole('button', { name: /New game/ }).click();
-  await page.waitForTimeout(200);
-  await page.getByRole('button', { name: /Tap again to erase/ }).click();
-  await page.waitForTimeout(500);
-  const afterReset = await page.evaluate(() => JSON.parse(localStorage.getItem('characterverse:progress:v1') || '{}'));
-  if (Object.keys(afterReset.stars || {}).length !== 0) throw new Error('Reset did not clear stars');
-  const headerAfterReset = await page.locator('header').innerText();
-  if (!headerAfterReset.includes('0')) throw new Error('Header did not reset: ' + headerAfterReset);
-  log('Progress reset OK ->', JSON.stringify(headerAfterReset));
-
-
-  // ── Mobile layout ──
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(BASE, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: `${SHOTS}/mobile-home.png` });
-  await page.goto(`${BASE}/world`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(400);
-  await page.screenshot({ path: `${SHOTS}/mobile-world.png` });
-
-  console.log('\n=== CONSOLE ERRORS ===');
-  console.log(errors.length ? errors.slice(0, 12).join('\n') : 'none');
-  console.log('ALL TESTS PASSED');
-} catch (e) {
-  await page.screenshot({ path: `${SHOTS}/failure.png` });
-  console.log('FAILED at:', e.message);
-  console.log('URL:', page.url());
-  console.log('Console errors:', errors.slice(0, 8).join('\n') || 'none');
-  process.exitCode = 1;
-} finally {
-  await browser.close();
+log('\n— Switch to Elsa and build the ice bridge —');
+await page.evaluate(() => window.__cv.setCharacter('elsa'));
+await wait(600);
+for (const x of [5900, 6500, 7050]) {
+  await page.evaluate((x) => window.__cv.warp(x, 520), x);
+  await wait(700);
+  await ability();
+  await wait(800);
 }
+s = await state();
+assert(s.flags.includes('icebridge'), 'ice bridge flag set after three freezes');
+assert(s.frozenGaps.length === 3, 'three ice platforms created');
+await page.screenshot({ path: `${shots}/10-icebridge.png` });
+
+log('\n— Reload: world changes persist —');
+await page.reload({ waitUntil: 'networkidle' });
+await wait(600);
+const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('characterverse:world:v1')));
+assert(saved.flags.includes('windmill') && saved.flags.includes('lamps') && saved.flags.includes('icebridge'), 'flags saved in localStorage');
+await page.getByRole('button', { name: /Continue/ }).click();
+await wait(400);
+await page.getByRole('button', { name: /Walk into Cartoon/i }).click();
+await wait(1600);
+if (await letsGo.isVisible().catch(() => false)) await letsGo.click();
+await wait(600);
+s = await state();
+assert(s.flags.includes('windmill'), 'windmill still fixed after reload');
+assert(s.frozenGaps.length === 3, 'ice bridge rebuilt from saved flag');
+await page.screenshot({ path: `${shots}/11-reloaded.png` });
+
+
+log('\n— Shinchan: find the three toys —');
+await page.evaluate(() => window.__cv.setCharacter('shinchan'));
+await wait(600);
+for (const [x, y] of [[300, 390], [2000, 410], [2390, 510]]) {
+  await warp(x, y);
+  await wait(650);
+  await interact();
+  await wait(550);
+}
+s = await state();
+assert(s.flags.includes('toys'), 'toys mission complete');
+await page.screenshot({ path: `${shots}/12-shinchan.png` });
+
+log('\n— Chhota Bheem: carry three crates to the hearth —');
+await page.evaluate(() => window.__cv.setCharacter('bheem'));
+await wait(600);
+for (const x of [1180, 1300, 1420]) {
+  await warp(x, 500);
+  await wait(500);
+  await interact();
+  await wait(300);
+  await warp(2090, 500);
+  await wait(550);
+  await interact();
+  await wait(400);
+}
+s = await state();
+assert(s.flags.includes('firewood'), 'firewood mission complete');
+await page.screenshot({ path: `${shots}/13-bheem.png` });
+
+log('\n— Barbie: plant three flowers in the forest —');
+await page.evaluate(() => window.__cv.setCharacter('barbie'));
+await wait(600);
+for (const x of [2940, 3680, 4760]) {
+  await warp(x, 520);
+  await wait(600);
+  await interact();
+  await wait(550);
+}
+s = await state();
+assert(s.flags.includes('garden'), 'garden mission complete');
+await page.screenshot({ path: `${shots}/14-barbie-forest.png` });
+
+log('\n— Spider-Man: grapple up and rescue two villagers —');
+await page.evaluate(() => window.__cv.setCharacter('spiderman'));
+await wait(600);
+for (const [ax, lx] of [[7180, 7160], [7480, 7460]]) {
+  await warp(ax - 120, 530);
+  await wait(500);
+  await ability();
+  await wait(900);
+  await warp(lx, 300);
+  await wait(750);
+  await interact();
+  await wait(550);
+}
+s = await state();
+assert(s.flags.includes('rescued'), 'rescue mission complete');
+await page.screenshot({ path: `${shots}/15-spiderman.png` });
+
+log('\n— Iron Man: recover parts and repair the generator —');
+await page.evaluate(() => window.__cv.setCharacter('ironman'));
+await wait(600);
+for (const [x, y] of [[5670, 510], [6220, 380], [6560, 320]]) {
+  await warp(x, y);
+  await wait(650);
+  await interact();
+  await wait(500);
+}
+await warp(6830, 505);
+await wait(650);
+s = await state();
+if (s.prompt !== 'Repair the generator') log('   (prompt was', s.prompt, ')');
+await interact();
+await wait(750);
+s = await state();
+assert(s.flags.includes('generator'), 'generator mission complete');
+await page.screenshot({ path: `${shots}/16-ironman-generator.png` });
+
+const all = await page.evaluate(() => JSON.parse(localStorage.getItem('characterverse:world:v1')));
+const doneCount = Object.values(all.missions).filter((m) => m.done).length;
+assert(doneCount === 8, 'all eight missions saved complete (' + doneCount + ')');
+
+console.log('\nERRORS', JSON.stringify(errors, null, 1));
+if (errors.length) process.exitCode = 1;
+await browser.close();
